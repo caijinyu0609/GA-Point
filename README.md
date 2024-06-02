@@ -7,8 +7,6 @@ The latest codes are tested on Ubuntu 20.04, CUDA11.1, PyTorch 1.7 and Python 3.
 ```shell
 conda install pytorch==1.7.1 cudatoolkit=11.1 -c pytorch
 ```
-```
-
 ## Semantic Segmentation (Points Data)
 ### Data Preparation
 Prepare 3D point dataset.
@@ -25,7 +23,6 @@ python bys_train_semseg_gan.py
 python test_semseg.py --log_dir 2023-05-02_09-37(your log) --test_area 5 --visual
 ```
 Visualization results will save in `log/sem_seg/pointnet2_sem_seg/visual/` and you can visualize these .obj file by [MeshLab](http://www.meshlab.net/).
-
 ## Visualization
 ### Using show3d_balls.py
 ```
