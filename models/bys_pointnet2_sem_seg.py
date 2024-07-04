@@ -100,7 +100,7 @@ class Discriminator(nn.Module):
         super().__init__()
 
         self.net = nn.Sequential(
-            ConvBlock(in_ch*2, n_f, 4, stride=2, activation="leaky"),    
+            ConvBlock(in_ch, n_f, 4, stride=2, activation="leaky"),    
             ConvBlock(n_f, n_f*2, 1, stride=2, activation="leaky"),   
             ConvBlock(n_f*2, n_f*4, 1, stride=2,  activation="leaky"),  
             ConvBlock(n_f*4, n_f*8, 1, stride=2,activation="leaky"),  
@@ -109,8 +109,8 @@ class Discriminator(nn.Module):
         # self.net.to(device)
         self.net.cuda()
         self.net.apply(init_weights)
-    def forward(self, x):
-        x = x.contiguous().view(64, 128,4)
+    def forward(self, x，batch_size,in_ch):
+        x = x.contiguous().view(batch_size,in_ch,-1)
         return self.net(x)
 class GANLoss(nn.Module):
     def __init__(self):
