@@ -106,6 +106,7 @@ def main(learning_rate, dropout_rate, optimizer, epoch):
     NUM_CLASSES = 4
     NUM_POINT = args.npoint
     BATCH_SIZE = args.batch_size
+    CH = 1
 
     print("start loading training data ...")
     TRAIN_DATASET = S3DISDataset(split='train', data_root=root, num_class = NUM_CLASSES, num_point=NUM_POINT, test_area=args.test_area, block_size=1.0, sample_rate=1.0, transform=None)
@@ -134,7 +135,7 @@ def main(learning_rate, dropout_rate, optimizer, epoch):
     classifier.apply(inplace_relu)
     # device = torch.device("cuda:0")
     
-    D_net_bw = Discriminator(64, in_ch=64).cuda()
+    D_net_bw = Discriminator(n_f = 64, in_ch=64).cuda()
     criterion_GAN = GANLoss().cuda()
     
     beta1 = 0.5     # parameter 1 for Adam optimizer
@@ -221,7 +222,7 @@ def main(learning_rate, dropout_rate, optimizer, epoch):
             points, target = points.float().cuda(), target.long().cuda()
             points = points.transpose(2, 1)
             seg_pred_l, trans_feat = classifier(points)
-            ### print(seg_pred_l[1,1,:])#8,4096,9
+            ### print(seg_pred_l[1,1,:])#16,4096,9
             seg_pred = seg_pred_l.contiguous().view(-1, NUM_CLASSES)
             batch_label = target.view(-1, 1)[:, 0].cpu().data.numpy()
             target = target.view(-1, 1)[:, 0]
@@ -229,7 +230,7 @@ def main(learning_rate, dropout_rate, optimizer, epoch):
             #Generator loss
             loss_point = criterion(seg_pred, target, trans_feat, weights)
             #Generator adversarial loss
-            fake = D_net_bw(seg_pred_max)
+            fake = D_net_bw(seg_pred_max,batch_size = BATCH_SIZE,in_ch=CH)
             loss_gan = criterion_GAN(fake, True)
             loss_G = loss_point + loss_gan
             loss_G.backward()
@@ -238,8 +239,8 @@ def main(learning_rate, dropout_rate, optimizer, epoch):
             # Train Discriminator
             optimizer_D.zero_grad()
             # Discriminator adversarial loss
-            loss_D_bw_real = criterion_GAN(D_net_bw(target.float().cuda()), True)
-            loss_D_bw_fake = criterion_GAN(D_net_bw(seg_pred_max.detach().float().cuda()), False)
+            loss_D_bw_real = criterion_GAN(D_net_bw(target.float().cuda(),batch_size = BATCH_SIZE,in_ch=CH), True)
+            loss_D_bw_fake = criterion_GAN(D_net_bw(seg_pred_max.detach().float().cuda(),batch_size = BATCH_SIZE,in_ch=CH), False)
             loss_D = loss_D_bw_real + loss_D_bw_fake
             loss_D.backward()
             optimizer_D.step()
