@@ -134,38 +134,20 @@ class get_loss(torch.nn.Module):
         self.mat_diff_loss_scale = mat_diff_loss_scale
 
     def forward(self, pred, target, trans_feat, weight):        
-        weights  = torch.ones([pred.shape[0],pred.shape[1]])#torch.float32
+        weights  = torch.ones([pred.shape[0],pred.shape[1]])
         a = 5
         weights[:,3][torch.where(target == 0)] = a
-        weights[:,3][torch.where(target == 1)] = 4*a
-        # weights[:,3][torch.where(target == 2)] = 2
-        # weights[:,3][torch.where(target == 3)] = 2
+        weights[:,3][torch.where(target == 1)] = 2*a
         # print(weight.max())
         nx = 3
-        # kernel = torch.ones(nx)/nx
         ny = 1
         kernel = torch.ones((nx,ny))*1/(nx*ny)
-        # print(kernel,kernel.shape)
-        # print(weights[20:1000,3])
         weights = signal.convolve(weights,kernel,mode='same')
         weights = torch.from_numpy(weights).cuda()
-        # print(weights[20:1000,3])
-        # print(pred_new.shape,target.shape)#torch.Size([32768, 4]) torch.Size([32768])
         loss = F.nll_loss(pred, target, weight = weight, reduction="none")#, reduction="none" (N,1) 
-        # print(target)# (N, ...)  
-        # print(weights[:,3])   
         loss = loss*weights[:,3]
-        # print(loss)
         loss = torch.mean(loss)
-        # print(loss)
         return loss
-# class get_loss(nn.Module):
-#     def __init__(self):
-#         super(get_loss, self).__init__()
-#     def forward(self, pred, target, trans_feat, weight):
-#        # print(pred.shape,target.shape)
-#         total_loss = F.nll_loss(pred, target, weight=weight)
-#         return total_loss
 
 # if __name__ == '__main__':
 #     import  torch
