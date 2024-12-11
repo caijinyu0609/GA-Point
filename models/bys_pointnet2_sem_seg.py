@@ -127,27 +127,16 @@ class GANLoss(nn.Module):
             target_tensor = self.fake_label.expand_as(prediction)
         loss = self.loss(prediction, target_tensor)
         return loss
-
 class get_loss(torch.nn.Module):
     def __init__(self, mat_diff_loss_scale=0.001):
         super(get_loss, self).__init__()
         self.mat_diff_loss_scale = mat_diff_loss_scale
 
-    def forward(self, pred, target, trans_feat, weight):        
-        weights  = torch.ones([pred.shape[0],pred.shape[1]])
-        a = 5
-        weights[:,3][torch.where(target == 0)] = a
-        weights[:,3][torch.where(target == 1)] = 2*a
-        # print(weight.max())
-        nx = 3
-        ny = 1
-        kernel = torch.ones((nx,ny))*1/(nx*ny)
-        weights = signal.convolve(weights,kernel,mode='same')
-        weights = torch.from_numpy(weights).cuda()
-        loss = F.nll_loss(pred, target, weight = weight, reduction="none")#, reduction="none" (N,1) 
-        loss = loss*weights[:,3]
-        loss = torch.mean(loss)
-        return loss
+    def forward(self, pred, target, trans_feat, weight):
+        loss = F.nll_loss(pred, target, weight = weight)
+        mat_diff_loss = feature_transform_reguliarzer(trans_feat)
+        total_loss = loss + mat_diff_loss * self.mat_diff_loss_scale
+        return total_loss
 
 # if __name__ == '__main__':
 #     import  torch
